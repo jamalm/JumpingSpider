@@ -44,6 +44,7 @@
 #include "VRGame1.h"
 #include "Assignment.h"
 #include "GravityGame.h"
+#include "JumpingSpider.h"
 
 using namespace BGE;
 extern "C" { FILE __iob_func[3] = { *stdin,*stdout,*stderr }; }
@@ -53,7 +54,7 @@ int main(int argc, char *argv[])
 	// http://www.youtube.com/watch?v=EEbVHxOkTxw
 	Params::Load("default");
 
-	shared_ptr<Game> game = make_shared<Lab3>();
+	shared_ptr<Game> game = make_shared<JumpingSpider>();
 	game->Run();
 	
 	return 0;

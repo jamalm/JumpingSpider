@@ -95,7 +95,8 @@ shared_ptr<PhysicsController> JumpingSpider::CreateBody(vector<shared_ptr<Physic
 	glm::vec3 offset;
 	float width = 4;
 	float height = 3;
-	float length = 6;
+	float length = 8;
+	float turningAngle = glm::half_pi<float>() / 4;
 
 	offset = glm::vec3(0, 0, length + 1);
 
@@ -105,16 +106,44 @@ shared_ptr<PhysicsController> JumpingSpider::CreateBody(vector<shared_ptr<Physic
 	btFixedConstraint* forebody_abdomen;
 
 	//adding constraints to forebody
+	
 	btTransform transformA;
 	btTransform transformB;
 
+	//attach forebody to abdomen
 	transformA.setIdentity();
 	transformB.setIdentity();
 	transformA.setOrigin(btVector3(0, 0, length));
 	transformB.setOrigin(btVector3(0, 0, 0));
 	forebody_abdomen = new btFixedConstraint(*forebody->rigidBody, *abdomen->rigidBody, transformA, transformB);
 	dynamicsWorld->addConstraint(forebody_abdomen);
+	
+	//connect legs to abdomen
+	for (int i = 0; i < 8; i++)
+	{
+		if(i<4){
+			//right legs first
+			btVector3 bodyPivot = btVector3(-width - 1, 1, (length / 2) - ((length / 4)*i));
+			btVector3 legPivot = btVector3(0, 0, 0);
 
+			btHingeConstraint* rightHinge
+				= new btHingeConstraint(*forebody->rigidBody, *limbs.at(i)->rigidBody, bodyPivot, legPivot, btVector3(0, 1, 0), btVector3(-1, 1, 0), true);
+			rightHinge->setLimit(-turningAngle, turningAngle);
+			dynamicsWorld->addConstraint(rightHinge);
+		}
+		else {
+			
+			//now left legs 
+			btVector3 bodyPivot = btVector3(width + 1, 1, (length / 2) - ((length / 4)*(i-4)));
+			btVector3 legPivot = btVector3(0, 0, 0);
+
+			btHingeConstraint* leftHinge
+				= new btHingeConstraint(*forebody->rigidBody, *limbs.at(i)->rigidBody, bodyPivot, legPivot, btVector3(0, 1, 0), btVector3(1, 1, 0), true);
+			leftHinge->setLimit(-turningAngle, turningAngle);
+			dynamicsWorld->addConstraint(leftHinge);
+		}
+	}
+	
 
 	return forebody;
 }
@@ -123,7 +152,7 @@ shared_ptr<PhysicsController> JumpingSpider::CreateSpider()
 {
 
 	vector<shared_ptr<PhysicsController>> limbs;
-	float turningAngle = glm::half_pi<float>() / 4;
+	
 
 	float width = 4;
 	float height = 3;
@@ -131,16 +160,18 @@ shared_ptr<PhysicsController> JumpingSpider::CreateSpider()
 
 	//body parts and legs
 	//shared_ptr<PhysicsController> body = CreateBody();
-
-	shared_ptr<PhysicsController> rightleg = CreateLeg(false);
-
-	shared_ptr<PhysicsController> leftleg = CreateLeg(true);
-
-	limbs.push_back(leftleg);
-	limbs.push_back(rightleg);
+	
+	for (int i = 0; i < 4; i++) 
+	{
+		limbs.push_back(CreateLeg(false));
+	}
+	for (int i = 0; i < 4; i++) 
+	{
+		limbs.push_back(CreateLeg(true));
+	}
 	shared_ptr<PhysicsController> body = CreateBody(limbs);
 
-
+	/*
 	btVector3 bodyPivot = btVector3(width + 1, 1, length / 4);
 	btVector3 legPivot = btVector3(0, 0, 0);
 
@@ -157,7 +188,7 @@ shared_ptr<PhysicsController> JumpingSpider::CreateSpider()
 		new btHingeConstraint(*body->rigidBody, *rightleg->rigidBody, bodyPivot, legPivot, btVector3(0, 1, 0), btVector3(-1, 1, 0), true);
 	hinge2->setLimit(-turningAngle, turningAngle);
 	dynamicsWorld->addConstraint(hinge2);
-
+	*/
 	//btVector3 thighPivot2 = btVector3();
 	//btVector3 calfPivot = btVector3();
 
