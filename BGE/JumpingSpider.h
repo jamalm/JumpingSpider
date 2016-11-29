@@ -24,6 +24,10 @@ namespace BGE
 	class JumpingSpider :
 		public Game
 	{
+	private:
+
+		shared_ptr<PhysicsController> CreateLeg(bool leftLeg);
+		shared_ptr<PhysicsController> CreateBody(vector<shared_ptr<PhysicsController>> limbs, glm::vec3 scale);
 	public:
 		JumpingSpider(void);
 		~JumpingSpider(void);
@@ -31,13 +35,7 @@ namespace BGE
 		void Update(float timeDelta);
 		void Cleanup();
 
-		shared_ptr<PhysicsController> CreateSpider();
-		shared_ptr<PhysicsController> CreateLeg(bool leftLeg);
-		shared_ptr<PhysicsController> CreateBody(vector<shared_ptr<PhysicsController>> limbs);
-		shared_ptr<PhysicsController> spider;
-		shared_ptr<PhysicsController> forebody;
-		shared_ptr<PhysicsController> abdomen;
-		shared_ptr<PhysicsController> leg_thigh;
-		shared_ptr<PhysicsController> leg_calf;
+		shared_ptr<PhysicsController> CreateSpider(float width, float height, float length);
+		vector<shared_ptr<PhysicsController>> limbs;
 	};
 }
