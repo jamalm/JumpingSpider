@@ -2,8 +2,9 @@
 /*
 #include "Game.h"
 #include "PhysicsFactory.h"
-#include <btBulletDynamicsCommon.h>*/
+#include <gbtBulletDynamicsCommon.h>*/
 #include "Game.h"
+#include "GameComponent.h"
 #include "PhysicsController.h"
 #include "PhysicsFactory.h"
 #include <btBulletDynamicsCommon.h>
@@ -29,13 +30,25 @@ namespace BGE
 		shared_ptr<PhysicsController> CreateLeg(bool leftLeg);
 		shared_ptr<PhysicsController> CreateBody(vector<shared_ptr<PhysicsController>> limbs, glm::vec3 scale);
 	public:
+		//standard methods
 		JumpingSpider(void);
 		~JumpingSpider(void);
 		bool Initialise();
-		void Update(float timeDelta);
+		void Update();
 		void Cleanup();
 
+		//custom methods
+		void Walk(bool inverse);
 		shared_ptr<PhysicsController> CreateSpider(float width, float height, float length);
+
+		//custom variables
 		vector<shared_ptr<PhysicsController>> limbs;
+		vector<btHingeConstraint*> joints;
+		vector<shared_ptr<PhysicsController>> spiders;
+		bool alternate;
+		float elapsed;
+		float timeToSpawn;
+		int velocity;
+		int strength;
 	};
 }

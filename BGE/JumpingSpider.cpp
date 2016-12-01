@@ -1,5 +1,7 @@
 #include "JumpingSpider.h"
-
+#include "Utils.h"
+#include "Content.h"
+#include "VectorDrawer.h"
 
 using namespace BGE;
 
@@ -8,7 +10,6 @@ JumpingSpider::JumpingSpider(void)
 
 }
 
-
 JumpingSpider::~JumpingSpider(void)
 {
 
@@ -16,22 +17,38 @@ JumpingSpider::~JumpingSpider(void)
 
 bool JumpingSpider::Initialise()
 {
+	elapsed = 0.0f;
+	timeToSpawn = 0.5f;
+
+	velocity = 1000;
+	strength = 500;
+	alternate = true;
+
 	physicsFactory->CreateGroundPhysics();
 	physicsFactory->CreateCameraPhysics();
-	setGravity(glm::vec3(0, -9, 0));
+	setGravity(glm::vec3(0, -3, 0));
 
-	
+	CreateSpider(3, 3, 12);
 
 	return Game::Initialise();
+	
 }
 
-void JumpingSpider::Update(float timeDelta)
+void JumpingSpider::Update()
 {
-	const Uint8 * KeyState = Game::Instance()->GetKeyState();
 
-	if (KeyState[SDL_SCANCODE_V]) 
+	if (keyState[SDL_SCANCODE_RETURN])
 	{
-		CreateSpider(4, 3, 6);
+		
+		
+	}
+	if (elapsed > timeToSpawn) {
+		Walk(alternate);
+		alternate = !alternate;
+		elapsed = 0;
+	}
+	else {
+		elapsed += Time::deltaTime;
 	}
 	Game::Update();
 }
@@ -51,7 +68,7 @@ shared_ptr<PhysicsController> JumpingSpider::CreateLeg(bool leftLeg)
 		position = glm::vec3(5, 10, 0);
 		shared_ptr<PhysicsController> segment = physicsFactory->CreateBox(4, .5, .5, position, qupper);
 		position = glm::vec3(10, 10, 0);
-		shared_ptr<PhysicsController> segment2 = physicsFactory->CreateBox(8, .5, .5, position, qlower);
+		shared_ptr<PhysicsController> segment2 = physicsFactory->CreateBox(12, .5, .5, position, qlower);
 
 		btTransform t1, t2;
 
@@ -73,7 +90,7 @@ shared_ptr<PhysicsController> JumpingSpider::CreateLeg(bool leftLeg)
 		position = glm::vec3(-5, 10, 0);
 		shared_ptr<PhysicsController> segment = physicsFactory->CreateBox(4, .5, .5, position, glm::quat());
 		position = glm::vec3(-10, 10, 0);
-		shared_ptr<PhysicsController> segment2 = physicsFactory->CreateBox(8, .5, .5, position, qlower);
+		shared_ptr<PhysicsController> segment2 = physicsFactory->CreateBox(12, .5, .5, position, qlower);
 
 		btTransform t1, t2;
 
@@ -136,7 +153,8 @@ shared_ptr<PhysicsController> JumpingSpider::CreateBody(vector<shared_ptr<Physic
 			btHingeConstraint* rightHinge
 				= new btHingeConstraint(*forebody->rigidBody, *limbs.at(i)->rigidBody, bodyPivot, legPivot, btVector3(0, 1, 0), btVector3(-1, 1, 0), true);
 			rightHinge->setLimit(-turningAngle, turningAngle);
-			rightHinge->enableAngularMotor(true, 10, 10);
+			//rightHinge->enableAngularMotor(true, 10, 10);
+			joints.push_back(rightHinge);
 			dynamicsWorld->addConstraint(rightHinge);
 		}
 		else {
@@ -148,7 +166,8 @@ shared_ptr<PhysicsController> JumpingSpider::CreateBody(vector<shared_ptr<Physic
 			btHingeConstraint* leftHinge
 				= new btHingeConstraint(*forebody->rigidBody, *limbs.at(i)->rigidBody, bodyPivot, legPivot, btVector3(0, 1, 0), btVector3(1, 1, 0), true);
 			leftHinge->setLimit(-turningAngle, turningAngle);
-			leftHinge->enableAngularMotor(true, 10, 10);
+			//leftHinge->enableAngularMotor(true, 10, 10);
+			joints.push_back(leftHinge);
 			dynamicsWorld->addConstraint(leftHinge);
 		}
 	}
@@ -176,5 +195,40 @@ shared_ptr<PhysicsController> JumpingSpider::CreateSpider(float _width, float _h
 	}
 	shared_ptr<PhysicsController> body = CreateBody(limbs, scale);
 
+	
 	return body;
+}
+
+
+void JumpingSpider::Walk(bool inverse)
+{
+	if (inverse) 
+	{
+		for (int i = 0; i < 8; i++)
+		{
+			//if leg index is an even number, move alternative to odd indexed legs
+			if (i % 2 == 0)
+			{
+				joints.at(i)->enableAngularMotor(true, velocity, strength);
+			}
+			else {
+				joints.at(i)->enableAngularMotor(true, -velocity, strength);
+			}
+		}
+	}
+	else
+	{
+		for (int i = 0; i < 8; i++)
+		{
+			//if leg index is an even number, move alternative to odd indexed legs
+			if (i % 2 == 0)
+			{
+				joints.at(i)->enableAngularMotor(true, -velocity, strength);
+			}
+			else {
+				joints.at(i)->enableAngularMotor(true, velocity, strength);
+			}
+		}
+	}
+	
 }
