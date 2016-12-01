@@ -239,6 +239,9 @@
     <ClCompile Include="Assignment.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="JumpingSpider.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -426,6 +429,9 @@
       <Filter>Kinect1</Filter>
     </ClInclude>
     <ClInclude Include="Assignment.h" />
+    <ClInclude Include="JumpingSpider.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Content\CubeShader.fragmentshader">

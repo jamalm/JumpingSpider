@@ -108,6 +108,7 @@
     <ClCompile Include="FlockingScenario.cpp" />
     <ClCompile Include="FountainEffect.cpp" />
     <ClCompile Include="IdleState.cpp" />
+    <ClCompile Include="JumpingSpider.cpp" />
     <ClCompile Include="KinectAudioStream.cpp" />
     <ClCompile Include="Lab3.cpp" />
     <ClCompile Include="Lab4.cpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="FlockingScenario.h" />
     <ClInclude Include="FountainEffect.h" />
     <ClInclude Include="IdleState.h" />
+    <ClInclude Include="JumpingSpider.h" />
     <ClInclude Include="KinectAudioStream.h" />
     <ClInclude Include="Lab3.h" />
     <ClInclude Include="Lab4.h" />
