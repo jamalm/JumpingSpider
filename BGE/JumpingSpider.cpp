@@ -41,7 +41,8 @@ bool JumpingSpider::Initialise()
 void JumpingSpider::Update()
 {
 	btVector3 position = GLToBtVector(body->transform->position);
-	//body->rigidBody->activate();
+	btVector3 torque = GLToBtVector(glm::cross(body->transform->right*force, body->transform->look*4.0f));
+	btVector3 hardTorque = GLToBtVector(glm::cross(body->transform->right*(force*10), body->transform->look*5.0f));
 	if (keyState[SDL_SCANCODE_UP])
 	{
 		body->rigidBody->setFriction(0);
@@ -58,11 +59,12 @@ void JumpingSpider::Update()
 			elapsed += Time::deltaTime;
 		}
 	}
+	//sharp turns
 	else if (keyState[SDL_SCANCODE_LSHIFT] && keyState[SDL_SCANCODE_LEFT])
 	{
 		body->rigidBody->setFriction(0);
 		abdomen->rigidBody->setFriction(0);
-		body->rigidBody->applyTorque(btVector3(force * 10, 0, 0));
+		body->rigidBody->applyTorque(hardTorque);
 
 		if (elapsed > timeToSpawn) {
 			Walk(alternate);
@@ -74,11 +76,12 @@ void JumpingSpider::Update()
 			elapsed += Time::deltaTime;
 		}
 	}
+	
 	else if (keyState[SDL_SCANCODE_LSHIFT] && keyState[SDL_SCANCODE_RIGHT])
 	{
 		body->rigidBody->setFriction(0);
 		abdomen->rigidBody->setFriction(0);
-		body->rigidBody->applyTorque(btVector3(-force * 10, 0, 0));
+		body->rigidBody->applyTorque(-hardTorque);
 
 		if (elapsed > timeToSpawn) {
 			Walk(alternate);
@@ -90,11 +93,12 @@ void JumpingSpider::Update()
 			elapsed += Time::deltaTime;
 		}
 	}
+	//normal turns
 	else if(keyState[SDL_SCANCODE_LEFT])
 	{
 		body->rigidBody->setFriction(0);
 		abdomen->rigidBody->setFriction(0);
-		body->rigidBody->applyTorque(btVector3(force, 0, 0));
+		body->rigidBody->applyTorque(torque);
 		
 		if (elapsed > timeToSpawn) {
 			Walk(alternate);
@@ -110,7 +114,7 @@ void JumpingSpider::Update()
 	{
 		body->rigidBody->setFriction(0);
 		abdomen->rigidBody->setFriction(0);
-		body->rigidBody->applyTorque(btVector3(-force, 0, 0));
+		body->rigidBody->applyTorque(-torque);
 
 		if (elapsed > timeToSpawn) {
 			Walk(alternate);
@@ -122,7 +126,12 @@ void JumpingSpider::Update()
 			elapsed += Time::deltaTime;
 		}
 	} 
-	
+	else if (keyState[SDL_SCANCODE_SPACE])
+	{
+		body->rigidBody->setFriction(0);
+		abdomen->rigidBody->setFriction(0);
+		body->rigidBody->applyCentralForce(GLToBtVector(body->transform->up * (force*10)));
+	}
 	else {
 		body->rigidBody->setFriction(100);
 		abdomen->rigidBody->setFriction(100);
