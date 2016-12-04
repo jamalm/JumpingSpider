@@ -19,16 +19,13 @@
 #include "FountainEffect.h"
 #include "Box.h"
 #include "SnowEffect.h"
+#include "SpiderController.h"
 
 namespace BGE
 {
 	class JumpingSpider :
 		public Game
 	{
-	private:
-		//for creating the spider
-		shared_ptr<PhysicsController> CreateLeg(bool leftLeg);
-		shared_ptr<PhysicsController> CreateBody(vector<shared_ptr<PhysicsController>> limbs, glm::vec3 scale);
 	public:
 		//standard methods
 		JumpingSpider(void);
@@ -37,35 +34,13 @@ namespace BGE
 		void Update();
 		void Cleanup();
 
-		//custom methods
-		void Walk(bool inverse);
-		void forward();
-		void jump();
-		void left(glm::vec3 torque);
-		void right(glm::vec3 torque);
-		void animate();
-		
-		shared_ptr<PhysicsController> CreateSpider(float width, float height, float length);
+		shared_ptr<SpiderController> spider;
+		shared_ptr<SpiderController> spider2;
+		shared_ptr<SpiderController> spider3;
+		shared_ptr<SpiderController> spider4;
 
-		//custom variables
-		vector<shared_ptr<PhysicsController>> limbs;
-		vector<btHingeConstraint*> joints;
-		shared_ptr<PhysicsController> body;
-		shared_ptr<PhysicsController> abdomen;
-
-		//for leg timing and alternations
-		bool alternate;
 		float elapsed;
-		float timeToMove;
-
-		//for movement of legs
-		int velocity;
-		int strength;
-		//for movement of rigidbody
-		float force;
-
-		//for rigidbody turning
-		glm::vec3 torque;
-		glm::vec3 hardTorque;
+		float timeChange;
+		int count;
 	};
 }
