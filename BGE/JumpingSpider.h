@@ -45,10 +45,18 @@ namespace BGE
 		vector<shared_ptr<PhysicsController>> limbs;
 		vector<btHingeConstraint*> joints;
 		vector<shared_ptr<PhysicsController>> spiders;
+		shared_ptr<PhysicsController> body;
+		shared_ptr<PhysicsController> abdomen;
 		bool alternate;
 		float elapsed;
 		float timeToSpawn;
 		int velocity;
 		int strength;
+
+		float force;
+
+
+		shared_ptr<PhysicsController> box1;
+
 	};
 }
