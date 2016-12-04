@@ -18,20 +18,24 @@ JumpingSpider::~JumpingSpider(void)
 bool JumpingSpider::Initialise()
 {
 	elapsed = 0.0f;
-	timeToSpawn = 1.0f;
+	timeToMove = 1.0f;
 
+	//strength of movement of rigidbody
 	force = 1000.0f;
 
+	//velocity of leg motors
 	velocity = 10000000;
+	//maximpulse of legs 
 	strength = 10000000;
+	//alternating boolean for leg motor direction
 	alternate = true;
-
+	
+	//standard calls to create scene
 	physicsFactory->CreateGroundPhysics();
 	physicsFactory->CreateCameraPhysics();
 	setGravity(glm::vec3(0, -9, 0));
 
-	
-	//box1 = physicsFactory->CreateBox(5,5,5,glm::vec3(0,0,0),glm::quat());
+	//create the spider 
 	CreateSpider(3, 3, 16);
 
 	return Game::Initialise();
@@ -40,98 +44,40 @@ bool JumpingSpider::Initialise()
 
 void JumpingSpider::Update()
 {
-	btVector3 position = GLToBtVector(body->transform->position);
-	btVector3 torque = GLToBtVector(glm::cross(body->transform->right*force, body->transform->look*4.0f));
-	btVector3 hardTorque = GLToBtVector(glm::cross(body->transform->right*(force*10), body->transform->look*5.0f));
+	//calculating torque for turns
+	torque = glm::cross(body->transform->right*force, body->transform->look*4.0f);
+	hardTorque = glm::cross(body->transform->right*(force*10), body->transform->look*5.0f);
+
+	//move forward
 	if (keyState[SDL_SCANCODE_UP])
 	{
-		body->rigidBody->setFriction(0);
-		abdomen->rigidBody->setFriction(0);
-		body->rigidBody->applyCentralForce(GLToBtVector(body->transform->look * force));
-		
-		if (elapsed > timeToSpawn) {
-			Walk(alternate);
-			alternate = !alternate;
-			elapsed = 0;
-
-		}
-		else {
-			elapsed += Time::deltaTime;
-		}
+		forward();
 	}
 	//sharp turns
 	else if (keyState[SDL_SCANCODE_LSHIFT] && keyState[SDL_SCANCODE_LEFT])
 	{
-		body->rigidBody->setFriction(0);
-		abdomen->rigidBody->setFriction(0);
-		body->rigidBody->applyTorque(hardTorque);
-
-		if (elapsed > timeToSpawn) {
-			Walk(alternate);
-			alternate = !alternate;
-			elapsed = 0;
-
-		}
-		else {
-			elapsed += Time::deltaTime;
-		}
+		left(hardTorque);
 	}
 	
 	else if (keyState[SDL_SCANCODE_LSHIFT] && keyState[SDL_SCANCODE_RIGHT])
 	{
-		body->rigidBody->setFriction(0);
-		abdomen->rigidBody->setFriction(0);
-		body->rigidBody->applyTorque(-hardTorque);
-
-		if (elapsed > timeToSpawn) {
-			Walk(alternate);
-			alternate = !alternate;
-			elapsed = 0;
-
-		}
-		else {
-			elapsed += Time::deltaTime;
-		}
+		right(-hardTorque);
 	}
 	//normal turns
 	else if(keyState[SDL_SCANCODE_LEFT])
 	{
-		body->rigidBody->setFriction(0);
-		abdomen->rigidBody->setFriction(0);
-		body->rigidBody->applyTorque(torque);
-		
-		if (elapsed > timeToSpawn) {
-			Walk(alternate);
-			alternate = !alternate;
-			elapsed = 0;
-
-		}
-		else {
-			elapsed += Time::deltaTime;
-		}
+		left(torque);
 	}
 	else if (keyState[SDL_SCANCODE_RIGHT])
 	{
-		body->rigidBody->setFriction(0);
-		abdomen->rigidBody->setFriction(0);
-		body->rigidBody->applyTorque(-torque);
-
-		if (elapsed > timeToSpawn) {
-			Walk(alternate);
-			alternate = !alternate;
-			elapsed = 0;
-
-		}
-		else {
-			elapsed += Time::deltaTime;
-		}
+		right(-torque);
 	} 
+	//jumping/flying
 	else if (keyState[SDL_SCANCODE_SPACE])
 	{
-		body->rigidBody->setFriction(0);
-		abdomen->rigidBody->setFriction(0);
-		body->rigidBody->applyCentralForce(GLToBtVector(body->transform->up * (force*10)));
+		jump();
 	}
+	//else slow spider down to stop
 	else {
 		body->rigidBody->setFriction(100);
 		abdomen->rigidBody->setFriction(100);
@@ -148,15 +94,19 @@ void JumpingSpider::Cleanup()
 //creates legs for the spider
 shared_ptr<PhysicsController> JumpingSpider::CreateLeg(bool leftLeg)
 {
+	
 	glm::vec3 position = glm::vec3(0, 10, 0);
+
+	//creates opposite angles for left and right legs|
 	if (leftLeg) {
-		glm::quat qupper = glm::angleAxis(90.0f, glm::vec3(0, 0, 1));
-		glm::quat qlower = glm::angleAxis(-90.0f, glm::vec3(0, 0, 1));
+		//creates lower leg and upper leg segments
 		position = glm::vec3(5, 10, 0);
 		shared_ptr<PhysicsController> segment = physicsFactory->CreateBox(4, .5, .5, position, glm::quat());
 		position = glm::vec3(10, 10, 0);
 		shared_ptr<PhysicsController> segment2 = physicsFactory->CreateBox(6, .5, .5, position, glm::quat());
 		segment2->rigidBody->setFriction(btScalar(0.0f));
+
+		//create pivot points for the constraints
 		btTransform t1, t2;
 
 		t1.setIdentity();
@@ -165,6 +115,7 @@ shared_ptr<PhysicsController> JumpingSpider::CreateLeg(bool leftLeg)
 		t2.setRotation(GLToBtQuat(glm::angleAxis(90.0f, glm::vec3(0, 0, 1))));
 		t2.setOrigin(btVector3(-2.5, 0, 0));
 
+		//create hinge
 		btFixedConstraint* hinge2 =
 			new btFixedConstraint(*segment->rigidBody, *segment2->rigidBody, t1, t2);
 		dynamicsWorld->addConstraint(hinge2);
@@ -172,13 +123,12 @@ shared_ptr<PhysicsController> JumpingSpider::CreateLeg(bool leftLeg)
 		return segment;
 	}
 	else {
-		glm::quat qupper = glm::angleAxis(-90.0f, glm::vec3(0, 0, 1));
-		glm::quat qlower = glm::angleAxis(90.0f, glm::vec3(0, 0, 1));
 		position = glm::vec3(-5, 10, 0);
 		shared_ptr<PhysicsController> segment = physicsFactory->CreateBox(4, .5, .5, position, glm::quat());
 		position = glm::vec3(-10, 10, 0);
 		shared_ptr<PhysicsController> segment2 = physicsFactory->CreateBox(6, .5, .5, position, glm::quat());
 		segment2->rigidBody->setFriction(btScalar(0.0f));
+
 		btTransform t1, t2;
 
 		t1.setIdentity();
@@ -204,11 +154,13 @@ shared_ptr<PhysicsController> JumpingSpider::CreateBody(vector<shared_ptr<Physic
 	glm::vec3 position = glm::vec3(0, 10, 0);
 
 	glm::vec3 offset;
+	//this is for the forebody
 	float width = scale.x;
 	float height = scale.y;
 	float length = scale.z;
+	//angle limitations for hinge joints on upper legs
 	float turningAngle = glm::half_pi<float>() / 4;
-
+	//this is for the abdomen on the back
 	offset = glm::vec3(0, 0, length + 1);
 
 	shared_ptr<PhysicsController> forebody = physicsFactory->CreateBox(width, height, length, position, glm::quat());
@@ -230,11 +182,11 @@ shared_ptr<PhysicsController> JumpingSpider::CreateBody(vector<shared_ptr<Physic
 	forebody_abdomen = new btFixedConstraint(*forebody->rigidBody, *abdomen->rigidBody, transformA, transformB);
 	dynamicsWorld->addConstraint(forebody_abdomen);
 	
-	//connect legs to abdomen
+	//connect legs to abdomen (hinge names are mixed up , doesn't make a difference)
 	for (int i = 0; i < 8; i++)
 	{
 		if (i<4) {
-			//right legs first
+			//left legs first
 			btVector3 bodyPivot = btVector3(-width - 1, 1, (length / 2) - ((length / 4)*i));
 			btVector3 legPivot = btVector3(0, 0, 0);
 
@@ -247,7 +199,7 @@ shared_ptr<PhysicsController> JumpingSpider::CreateBody(vector<shared_ptr<Physic
 		}
 		else {
 
-			//now left legs 
+			//now right legs 
 			btVector3 bodyPivot = btVector3(width + 1, 1, (length / 2) - ((length / 4)*(i - 4)));
 			btVector3 legPivot = btVector3(0, 0, 0);
 
@@ -262,8 +214,10 @@ shared_ptr<PhysicsController> JumpingSpider::CreateBody(vector<shared_ptr<Physic
 	return forebody;
 }
 
+//time to put it all together
 shared_ptr<PhysicsController> JumpingSpider::CreateSpider(float _width, float _height, float _length)
 {
+	//for forebody
 	float width = _width;
 	float height = _height;
 	float length = _length;
@@ -285,7 +239,7 @@ shared_ptr<PhysicsController> JumpingSpider::CreateSpider(float _width, float _h
 	return body;
 }
 
-
+//animation for leg movement, using angular motors to rotate the hinges
 void JumpingSpider::Walk(bool inverse)
 {
 	if (inverse)
@@ -317,4 +271,55 @@ void JumpingSpider::Walk(bool inverse)
 		}
 	}
 
+}
+
+//move forward relative to spider's look vector
+void JumpingSpider::forward()
+{
+	body->rigidBody->setFriction(0);
+	abdomen->rigidBody->setFriction(0);
+	body->rigidBody->applyCentralForce(GLToBtVector(body->transform->look * force));
+
+	animate();
+}
+
+//turn left 
+void JumpingSpider::left(glm::vec3 torque)
+{
+	body->rigidBody->setFriction(0);
+	abdomen->rigidBody->setFriction(0);
+	body->rigidBody->applyTorque(GLToBtVector(torque));
+
+	animate();
+}
+
+//turn right
+void JumpingSpider::right(glm::vec3 torque)
+{
+	body->rigidBody->setFriction(0);
+	abdomen->rigidBody->setFriction(0);
+	body->rigidBody->applyTorque(GLToBtVector(torque));
+	
+	animate();
+}
+//lift off the ground
+void JumpingSpider::jump()
+{
+	body->rigidBody->setFriction(0);
+	abdomen->rigidBody->setFriction(0);
+	body->rigidBody->applyCentralForce(GLToBtVector(body->transform->up * (force * 10)));
+}
+
+//regulate the leg movements
+void JumpingSpider::animate()
+{
+	if (elapsed > timeToMove) {
+		Walk(alternate);
+		alternate = !alternate;
+		elapsed = 0;
+
+	}
+	else {
+		elapsed += Time::deltaTime;
+	}
 }

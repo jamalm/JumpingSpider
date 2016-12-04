@@ -26,7 +26,7 @@ namespace BGE
 		public Game
 	{
 	private:
-
+		//for creating the spider
 		shared_ptr<PhysicsController> CreateLeg(bool leftLeg);
 		shared_ptr<PhysicsController> CreateBody(vector<shared_ptr<PhysicsController>> limbs, glm::vec3 scale);
 	public:
@@ -39,24 +39,33 @@ namespace BGE
 
 		//custom methods
 		void Walk(bool inverse);
+		void forward();
+		void jump();
+		void left(glm::vec3 torque);
+		void right(glm::vec3 torque);
+		void animate();
+		
 		shared_ptr<PhysicsController> CreateSpider(float width, float height, float length);
 
 		//custom variables
 		vector<shared_ptr<PhysicsController>> limbs;
 		vector<btHingeConstraint*> joints;
-		vector<shared_ptr<PhysicsController>> spiders;
 		shared_ptr<PhysicsController> body;
 		shared_ptr<PhysicsController> abdomen;
+
+		//for leg timing and alternations
 		bool alternate;
 		float elapsed;
-		float timeToSpawn;
+		float timeToMove;
+
+		//for movement of legs
 		int velocity;
 		int strength;
-
+		//for movement of rigidbody
 		float force;
 
-
-		shared_ptr<PhysicsController> box1;
-
+		//for rigidbody turning
+		glm::vec3 torque;
+		glm::vec3 hardTorque;
 	};
 }
